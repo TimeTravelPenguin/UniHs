@@ -1,0 +1,354 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE GeneralizedNewtypeDeriving #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE MultiParamTypeClasses #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE OverloadedLists #-}</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Printing</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-7"></span><span>  </span><span class="annot"><a href="Printing.html#Message"><span class="hs-identifier">Message</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>  </span><span class="annot"><a href="Printing.html#URI"><span class="hs-identifier">URI</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>  </span><span class="annot"><a href="Printing.html#SGRStack"><span class="hs-identifier">SGRStack</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>  </span><span class="annot"><a href="Printing.html#startSGRScope"><span class="hs-identifier">startSGRScope</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>  </span><span class="annot"><a href="Printing.html#nestedSGRScope"><span class="hs-identifier">nestedSGRScope</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>  </span><span class="annot"><a href="Printing.html#sgrHyperlink"><span class="hs-identifier">sgrHyperlink</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>  </span><span class="annot"><a href="Printing.html#sgrGray"><span class="hs-identifier">sgrGray</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>  </span><span class="annot"><a href="Printing.html#sgrYellow"><span class="hs-identifier">sgrYellow</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>  </span><span class="annot"><a href="Printing.html#sgrBlue"><span class="hs-identifier">sgrBlue</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="annot"><a href="Printing.html#sgrPutStr"><span class="hs-identifier">sgrPutStr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>  </span><span class="annot"><a href="Printing.html#sgrPutStrLn"><span class="hs-identifier">sgrPutStrLn</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.State.Strict</span></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-21"></span><span>  </span><span class="annot"><span class="hs-identifier">MonadIO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">liftIO</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>  </span><span class="annot"><span class="hs-identifier">MonadState</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">get</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">put</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>  </span><span class="annot"><span class="hs-identifier">StateT</span></span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>  </span><span class="annot"><span class="hs-identifier">evalStateT</span></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>  </span><span class="annot"><span class="hs-identifier">lift</span></span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>  </span><span class="annot"><span class="hs-identifier">withStateT</span></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Foldable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">toList</span></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Sequence</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Seq</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(&gt;&lt;)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Sequence</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Seq</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">System.Console.ANSI</span></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-32"></span><span>  </span><span class="annot"><span class="hs-identifier">Color</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Blue</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">White</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Yellow</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>  </span><span class="annot"><span class="hs-identifier">ColorIntensity</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Dull</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Vivid</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>  </span><span class="annot"><span class="hs-identifier">ConsoleIntensity</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">BoldIntensity</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>  </span><span class="annot"><span class="hs-identifier">ConsoleLayer</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Foreground</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>  </span><span class="annot"><span class="hs-identifier">SGR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Reset</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">SetColor</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">SetConsoleIntensity</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>  </span><span class="annot"><span class="hs-identifier">hyperlink</span></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>  </span><span class="annot"><span class="hs-identifier">setSGR</span></span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">type</span><span> </span><span id="Message"><span class="annot"><a href="Printing.html#Message"><span class="hs-identifier hs-var">Message</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-42"></span><span class="hs-keyword">type</span><span> </span><span id="URI"><span class="annot"><a href="Printing.html#URI"><span class="hs-identifier hs-var">URI</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="hs-keyword">newtype</span><span> </span><span id="SGRStack"><span class="annot"><a href="Printing.html#SGRStack"><span class="hs-identifier hs-var">SGRStack</span></a></span></span><span> </span><span id="local-6989586621679165171"><span class="annot"><a href="#local-6989586621679165171"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SGRStack"><span class="annot"><a href="Printing.html#SGRStack"><span class="hs-identifier hs-var">SGRStack</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">StateT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">SGR</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621679165171"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679165271"><span id="local-6989586621679165277"><span class="annot"><span class="annottext">(forall a b. (a -&gt; b) -&gt; SGRStack a -&gt; SGRStack b)
+-&gt; (forall a b. a -&gt; SGRStack b -&gt; SGRStack a) -&gt; Functor SGRStack
+forall a b. a -&gt; SGRStack b -&gt; SGRStack a
+forall a b. (a -&gt; b) -&gt; SGRStack a -&gt; SGRStack b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall a b. (a -&gt; b) -&gt; SGRStack a -&gt; SGRStack b
+fmap :: forall a b. (a -&gt; b) -&gt; SGRStack a -&gt; SGRStack b
+$c&lt;$ :: forall a b. a -&gt; SGRStack b -&gt; SGRStack a
+&lt;$ :: forall a b. a -&gt; SGRStack b -&gt; SGRStack a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165286"><span id="local-6989586621679165293"><span id="local-6989586621679165299"><span id="local-6989586621679165305"><span id="local-6989586621679165311"><span class="annot"><span class="annottext">Functor SGRStack
+Functor SGRStack =&gt;
+(forall a. a -&gt; SGRStack a)
+-&gt; (forall a b. SGRStack (a -&gt; b) -&gt; SGRStack a -&gt; SGRStack b)
+-&gt; (forall a b c.
+    (a -&gt; b -&gt; c) -&gt; SGRStack a -&gt; SGRStack b -&gt; SGRStack c)
+-&gt; (forall a b. SGRStack a -&gt; SGRStack b -&gt; SGRStack b)
+-&gt; (forall a b. SGRStack a -&gt; SGRStack b -&gt; SGRStack a)
+-&gt; Applicative SGRStack
+forall a. a -&gt; SGRStack a
+forall a b. SGRStack a -&gt; SGRStack b -&gt; SGRStack a
+forall a b. SGRStack a -&gt; SGRStack b -&gt; SGRStack b
+forall a b. SGRStack (a -&gt; b) -&gt; SGRStack a -&gt; SGRStack b
+forall a b c.
+(a -&gt; b -&gt; c) -&gt; SGRStack a -&gt; SGRStack b -&gt; SGRStack c
+forall (f :: * -&gt; *).
+Functor f =&gt;
+(forall a. a -&gt; f a)
+-&gt; (forall a b. f (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b c. (a -&gt; b -&gt; c) -&gt; f a -&gt; f b -&gt; f c)
+-&gt; (forall a b. f a -&gt; f b -&gt; f b)
+-&gt; (forall a b. f a -&gt; f b -&gt; f a)
+-&gt; Applicative f
+$cpure :: forall a. a -&gt; SGRStack a
+pure :: forall a. a -&gt; SGRStack a
+$c&lt;*&gt; :: forall a b. SGRStack (a -&gt; b) -&gt; SGRStack a -&gt; SGRStack b
+&lt;*&gt; :: forall a b. SGRStack (a -&gt; b) -&gt; SGRStack a -&gt; SGRStack b
+$cliftA2 :: forall a b c.
+(a -&gt; b -&gt; c) -&gt; SGRStack a -&gt; SGRStack b -&gt; SGRStack c
+liftA2 :: forall a b c.
+(a -&gt; b -&gt; c) -&gt; SGRStack a -&gt; SGRStack b -&gt; SGRStack c
+$c*&gt; :: forall a b. SGRStack a -&gt; SGRStack b -&gt; SGRStack b
+*&gt; :: forall a b. SGRStack a -&gt; SGRStack b -&gt; SGRStack b
+$c&lt;* :: forall a b. SGRStack a -&gt; SGRStack b -&gt; SGRStack a
+&lt;* :: forall a b. SGRStack a -&gt; SGRStack b -&gt; SGRStack a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Applicative</span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165322"><span id="local-6989586621679165328"><span id="local-6989586621679165333"><span class="annot"><span class="annottext">Applicative SGRStack
+Applicative SGRStack =&gt;
+(forall a b. SGRStack a -&gt; (a -&gt; SGRStack b) -&gt; SGRStack b)
+-&gt; (forall a b. SGRStack a -&gt; SGRStack b -&gt; SGRStack b)
+-&gt; (forall a. a -&gt; SGRStack a)
+-&gt; Monad SGRStack
+forall a. a -&gt; SGRStack a
+forall a b. SGRStack a -&gt; SGRStack b -&gt; SGRStack b
+forall a b. SGRStack a -&gt; (a -&gt; SGRStack b) -&gt; SGRStack b
+forall (m :: * -&gt; *).
+Applicative m =&gt;
+(forall a b. m a -&gt; (a -&gt; m b) -&gt; m b)
+-&gt; (forall a b. m a -&gt; m b -&gt; m b)
+-&gt; (forall a. a -&gt; m a)
+-&gt; Monad m
+$c&gt;&gt;= :: forall a b. SGRStack a -&gt; (a -&gt; SGRStack b) -&gt; SGRStack b
+&gt;&gt;= :: forall a b. SGRStack a -&gt; (a -&gt; SGRStack b) -&gt; SGRStack b
+$c&gt;&gt; :: forall a b. SGRStack a -&gt; SGRStack b -&gt; SGRStack b
+&gt;&gt; :: forall a b. SGRStack a -&gt; SGRStack b -&gt; SGRStack b
+$creturn :: forall a. a -&gt; SGRStack a
+return :: forall a. a -&gt; SGRStack a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monad</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="Printing.html#SGRStack"><span class="hs-identifier hs-type">SGRStack</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-48"></span><span>  </span><span id="local-6989586621679165345"><span class="annot"><span class="annottext">liftIO :: forall a. IO a -&gt; SGRStack a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">liftIO</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StateT (Seq SGR) IO a -&gt; SGRStack a
+forall a. StateT (Seq SGR) IO a -&gt; SGRStack a
+</span><a href="Printing.html#SGRStack"><span class="hs-identifier hs-var">SGRStack</span></a></span><span> </span><span class="annot"><span class="annottext">(StateT (Seq SGR) IO a -&gt; SGRStack a)
+-&gt; (IO a -&gt; StateT (Seq SGR) IO a) -&gt; IO a -&gt; SGRStack a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">IO a -&gt; StateT (Seq SGR) IO a
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; StateT (Seq SGR) m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679165352"><span class="annot"><span class="hs-identifier hs-type">MonadState</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">SGR</span></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Printing.html#SGRStack"><span class="hs-identifier hs-type">SGRStack</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-51"></span><span>  </span><span id="local-6989586621679165358"><span class="annot"><span class="annottext">get :: SGRStack (Seq SGR)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">get</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StateT (Seq SGR) IO (Seq SGR) -&gt; SGRStack (Seq SGR)
+forall a. StateT (Seq SGR) IO a -&gt; SGRStack a
+</span><a href="Printing.html#SGRStack"><span class="hs-identifier hs-var">SGRStack</span></a></span><span> </span><span class="annot"><span class="annottext">StateT (Seq SGR) IO (Seq SGR)
+forall s (m :: * -&gt; *). MonadState s m =&gt; m s
+</span><span class="hs-identifier hs-var">get</span></span><span>
+</span><span id="line-52"></span><span>  </span><span id="local-6989586621679165361"><span class="annot"><span class="annottext">put :: Seq SGR -&gt; SGRStack ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">put</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StateT (Seq SGR) IO () -&gt; SGRStack ()
+forall a. StateT (Seq SGR) IO a -&gt; SGRStack a
+</span><a href="Printing.html#SGRStack"><span class="hs-identifier hs-var">SGRStack</span></a></span><span> </span><span class="annot"><span class="annottext">(StateT (Seq SGR) IO () -&gt; SGRStack ())
+-&gt; (Seq SGR -&gt; StateT (Seq SGR) IO ()) -&gt; Seq SGR -&gt; SGRStack ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Seq SGR -&gt; StateT (Seq SGR) IO ()
+forall s (m :: * -&gt; *). MonadState s m =&gt; s -&gt; m ()
+</span><span class="hs-identifier hs-var">put</span></span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span id="local-6989586621679165183"><span class="annot"><a href="Printing.html#evalSGRStack"><span class="hs-identifier hs-type">evalSGRStack</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Printing.html#SGRStack"><span class="hs-identifier hs-type">SGRStack</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165183"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">SGR</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621679165183"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-55"></span><span id="evalSGRStack"><span class="annot"><span class="annottext">evalSGRStack :: forall a. SGRStack a -&gt; Seq SGR -&gt; IO a
+</span><a href="Printing.html#evalSGRStack"><span class="hs-identifier hs-var hs-var">evalSGRStack</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Printing.html#SGRStack"><span class="hs-identifier hs-type">SGRStack</span></a></span><span> </span><span id="local-6989586621679165364"><span class="annot"><span class="annottext">StateT (Seq SGR) IO a
+</span><a href="#local-6989586621679165364"><span class="hs-identifier hs-var">state</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StateT (Seq SGR) IO a -&gt; Seq SGR -&gt; IO a
+forall (m :: * -&gt; *) s a. Monad m =&gt; StateT s m a -&gt; s -&gt; m a
+</span><span class="hs-identifier hs-var">evalStateT</span></span><span> </span><span class="annot"><span class="annottext">StateT (Seq SGR) IO a
+</span><a href="#local-6989586621679165364"><span class="hs-identifier hs-var">state</span></a></span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span id="local-6989586621679165188"><span class="annot"><a href="Printing.html#withSGRStack"><span class="hs-identifier hs-type">withSGRStack</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">SGR</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">SGR</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Printing.html#SGRStack"><span class="hs-identifier hs-type">SGRStack</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165188"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Printing.html#SGRStack"><span class="hs-identifier hs-type">SGRStack</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165188"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-58"></span><span id="withSGRStack"><span class="annot"><span class="annottext">withSGRStack :: forall a. (Seq SGR -&gt; Seq SGR) -&gt; SGRStack a -&gt; SGRStack a
+</span><a href="Printing.html#withSGRStack"><span class="hs-identifier hs-var hs-var">withSGRStack</span></a></span></span><span> </span><span id="local-6989586621679165366"><span class="annot"><span class="annottext">Seq SGR -&gt; Seq SGR
+</span><a href="#local-6989586621679165366"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Printing.html#SGRStack"><span class="hs-identifier hs-type">SGRStack</span></a></span><span> </span><span id="local-6989586621679165367"><span class="annot"><span class="annottext">StateT (Seq SGR) IO a
+</span><a href="#local-6989586621679165367"><span class="hs-identifier hs-var">state</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StateT (Seq SGR) IO a -&gt; SGRStack a
+forall a. StateT (Seq SGR) IO a -&gt; SGRStack a
+</span><a href="Printing.html#SGRStack"><span class="hs-identifier hs-var">SGRStack</span></a></span><span> </span><span class="annot"><span class="annottext">(StateT (Seq SGR) IO a -&gt; SGRStack a)
+-&gt; StateT (Seq SGR) IO a -&gt; SGRStack a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Seq SGR -&gt; Seq SGR)
+-&gt; StateT (Seq SGR) IO a -&gt; StateT (Seq SGR) IO a
+forall s (m :: * -&gt; *) a. (s -&gt; s) -&gt; StateT s m a -&gt; StateT s m a
+</span><span class="hs-identifier hs-var">withStateT</span></span><span> </span><span class="annot"><span class="annottext">Seq SGR -&gt; Seq SGR
+</span><a href="#local-6989586621679165366"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">StateT (Seq SGR) IO a
+</span><a href="#local-6989586621679165367"><span class="hs-identifier hs-var">state</span></a></span><span>
+</span><span id="line-59"></span><span>
+</span><span id="line-60"></span><span class="annot"><a href="Printing.html#sgrGray"><span class="hs-identifier hs-type">sgrGray</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">SGR</span></span><span class="hs-special">]</span><span>
+</span><span id="line-61"></span><span id="sgrGray"><span class="annot"><span class="annottext">sgrGray :: [SGR]
+</span><a href="Printing.html#sgrGray"><span class="hs-identifier hs-var hs-var">sgrGray</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">ConsoleLayer -&gt; ColorIntensity -&gt; Color -&gt; SGR
+</span><span class="hs-identifier hs-var">SetColor</span></span><span> </span><span class="annot"><span class="annottext">ConsoleLayer
+</span><span class="hs-identifier hs-var">Foreground</span></span><span> </span><span class="annot"><span class="annottext">ColorIntensity
+</span><span class="hs-identifier hs-var">Dull</span></span><span> </span><span class="annot"><span class="annottext">Color
+</span><span class="hs-identifier hs-var">White</span></span><span class="hs-special">]</span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span class="annot"><a href="Printing.html#sgrYellow"><span class="hs-identifier hs-type">sgrYellow</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">SGR</span></span><span class="hs-special">]</span><span>
+</span><span id="line-64"></span><span id="sgrYellow"><span class="annot"><span class="annottext">sgrYellow :: [SGR]
+</span><a href="Printing.html#sgrYellow"><span class="hs-identifier hs-var hs-var">sgrYellow</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">ConsoleLayer -&gt; ColorIntensity -&gt; Color -&gt; SGR
+</span><span class="hs-identifier hs-var">SetColor</span></span><span> </span><span class="annot"><span class="annottext">ConsoleLayer
+</span><span class="hs-identifier hs-var">Foreground</span></span><span> </span><span class="annot"><span class="annottext">ColorIntensity
+</span><span class="hs-identifier hs-var">Dull</span></span><span> </span><span class="annot"><span class="annottext">Color
+</span><span class="hs-identifier hs-var">Yellow</span></span><span class="hs-special">]</span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="annot"><a href="Printing.html#sgrBlue"><span class="hs-identifier hs-type">sgrBlue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">SGR</span></span><span class="hs-special">]</span><span>
+</span><span id="line-67"></span><span id="sgrBlue"><span class="annot"><span class="annottext">sgrBlue :: [SGR]
+</span><a href="Printing.html#sgrBlue"><span class="hs-identifier hs-var hs-var">sgrBlue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">ConsoleLayer -&gt; ColorIntensity -&gt; Color -&gt; SGR
+</span><span class="hs-identifier hs-var">SetColor</span></span><span> </span><span class="annot"><span class="annottext">ConsoleLayer
+</span><span class="hs-identifier hs-var">Foreground</span></span><span> </span><span class="annot"><span class="annottext">ColorIntensity
+</span><span class="hs-identifier hs-var">Vivid</span></span><span> </span><span class="annot"><span class="annottext">Color
+</span><span class="hs-identifier hs-var">Blue</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ConsoleIntensity -&gt; SGR
+</span><span class="hs-identifier hs-var">SetConsoleIntensity</span></span><span> </span><span class="annot"><span class="annottext">ConsoleIntensity
+</span><span class="hs-identifier hs-var">BoldIntensity</span></span><span class="hs-special">]</span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span class="annot"><span class="hs-comment">-- | Set the current graphics options using the current stack state</span></span><span>
+</span><span id="line-70"></span><span class="annot"><a href="Printing.html#setSGRScope"><span class="hs-identifier hs-type">setSGRScope</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Printing.html#SGRStack"><span class="hs-identifier hs-type">SGRStack</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span id="setSGRScope"><span class="annot"><span class="annottext">setSGRScope :: SGRStack ()
+</span><a href="Printing.html#setSGRScope"><span class="hs-identifier hs-var hs-var">setSGRScope</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-72"></span><span>  </span><span id="local-6989586621679165369"><span class="annot"><span class="annottext">[SGR]
+</span><a href="#local-6989586621679165369"><span class="hs-identifier hs-var">sgrs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Seq SGR -&gt; [SGR]) -&gt; SGRStack (Seq SGR) -&gt; SGRStack [SGR]
+forall a b. (a -&gt; b) -&gt; SGRStack a -&gt; SGRStack b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">Seq SGR -&gt; [SGR]
+forall a. Seq a -&gt; [a]
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
+</span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">SGRStack (Seq SGR)
+forall s (m :: * -&gt; *). MonadState s m =&gt; m s
+</span><span class="hs-identifier hs-var">get</span></span><span>
+</span><span id="line-73"></span><span>  </span><span class="annot"><span class="annottext">IO () -&gt; SGRStack ()
+forall a. IO a -&gt; SGRStack a
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; SGRStack ()) -&gt; IO () -&gt; SGRStack ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[SGR] -&gt; IO ()
+</span><span class="hs-identifier hs-var">setSGR</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">SGR
+Item [SGR]
+</span><span class="hs-identifier hs-var">Reset</span></span><span class="hs-special">]</span><span>
+</span><span id="line-74"></span><span>  </span><span class="annot"><span class="annottext">IO () -&gt; SGRStack ()
+forall a. IO a -&gt; SGRStack a
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; SGRStack ()) -&gt; IO () -&gt; SGRStack ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[SGR] -&gt; IO ()
+</span><span class="hs-identifier hs-var">setSGR</span></span><span> </span><span class="annot"><span class="annottext">[SGR]
+</span><a href="#local-6989586621679165369"><span class="hs-identifier hs-var">sgrs</span></a></span><span>
+</span><span id="line-75"></span><span>
+</span><span id="line-76"></span><span class="annot"><span class="hs-comment">-- | Start a new SGR scope with the provided initial SGR paramaters.</span></span><span>
+</span><span id="line-77"></span><span id="local-6989586621679165203"><span class="annot"><a href="Printing.html#startSGRScope"><span class="hs-identifier hs-type">startSGRScope</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">SGR</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Printing.html#SGRStack"><span class="hs-identifier hs-type">SGRStack</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165203"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621679165203"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-78"></span><span id="startSGRScope"><span class="annot"><span class="annottext">startSGRScope :: forall a. [SGR] -&gt; SGRStack a -&gt; IO a
+</span><a href="Printing.html#startSGRScope"><span class="hs-identifier hs-var hs-var">startSGRScope</span></a></span></span><span> </span><span id="local-6989586621679165375"><span class="annot"><span class="annottext">[SGR]
+</span><a href="#local-6989586621679165375"><span class="hs-identifier hs-var">sgrs</span></a></span></span><span> </span><span id="local-6989586621679165376"><span class="annot"><span class="annottext">SGRStack a
+</span><a href="#local-6989586621679165376"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-79"></span><span>  </span><span id="local-6989586621679165377"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679165377"><span class="hs-identifier hs-var">res</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SGRStack a -&gt; Seq SGR -&gt; IO a
+forall a. SGRStack a -&gt; Seq SGR -&gt; IO a
+</span><a href="Printing.html#evalSGRStack"><span class="hs-identifier hs-var">evalSGRStack</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SGRStack ()
+</span><a href="Printing.html#setSGRScope"><span class="hs-identifier hs-var">setSGRScope</span></a></span><span> </span><span class="annot"><span class="annottext">SGRStack () -&gt; SGRStack a -&gt; SGRStack a
+forall a b. SGRStack a -&gt; SGRStack b -&gt; SGRStack b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; m b -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">SGRStack a
+</span><a href="#local-6989586621679165376"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[SGR] -&gt; Seq SGR
+forall a. [a] -&gt; Seq a
+</span><span class="hs-identifier hs-var">Seq.fromList</span></span><span> </span><span class="annot"><span class="annottext">[SGR]
+</span><a href="#local-6989586621679165375"><span class="hs-identifier hs-var">sgrs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-80"></span><span>  </span><span class="annot"><span class="annottext">[SGR] -&gt; IO ()
+</span><span class="hs-identifier hs-var">setSGR</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">SGR
+Item [SGR]
+</span><span class="hs-identifier hs-var">Reset</span></span><span class="hs-special">]</span><span>
+</span><span id="line-81"></span><span>  </span><span class="annot"><span class="annottext">a -&gt; IO a
+forall a. a -&gt; IO a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679165377"><span class="hs-identifier hs-var">res</span></a></span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span class="hs-comment">-- | Start an inner SGR scope, appending the provided options to the stack.</span><span>
+</span><span id="line-84"></span><span class="hs-comment">-- These options are set in order, after previously provided options.</span><span>
+</span><span id="line-85"></span><span id="local-6989586621679165206"><span class="annot"><a href="Printing.html#nestedSGRScope"><span class="hs-identifier hs-type">nestedSGRScope</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">SGR</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Printing.html#SGRStack"><span class="hs-identifier hs-type">SGRStack</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165206"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Printing.html#SGRStack"><span class="hs-identifier hs-type">SGRStack</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165206"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-86"></span><span id="nestedSGRScope"><span class="annot"><span class="annottext">nestedSGRScope :: forall a. [SGR] -&gt; SGRStack a -&gt; SGRStack a
+</span><a href="Printing.html#nestedSGRScope"><span class="hs-identifier hs-var hs-var">nestedSGRScope</span></a></span></span><span> </span><span id="local-6989586621679165387"><span class="annot"><span class="annottext">[SGR]
+</span><a href="#local-6989586621679165387"><span class="hs-identifier hs-var">sgrs</span></a></span></span><span> </span><span id="local-6989586621679165388"><span class="annot"><span class="annottext">SGRStack a
+</span><a href="#local-6989586621679165388"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-87"></span><span>  </span><span id="local-6989586621679165389"><span class="annot"><span class="annottext">Seq SGR
+</span><a href="#local-6989586621679165389"><span class="hs-identifier hs-var">prevSGR</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SGRStack (Seq SGR)
+forall s (m :: * -&gt; *). MonadState s m =&gt; m s
+</span><span class="hs-identifier hs-var">get</span></span><span>
+</span><span id="line-88"></span><span>  </span><span id="local-6989586621679165390"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679165390"><span class="hs-identifier hs-var">res</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Seq SGR -&gt; Seq SGR) -&gt; SGRStack a -&gt; SGRStack a
+forall a. (Seq SGR -&gt; Seq SGR) -&gt; SGRStack a -&gt; SGRStack a
+</span><a href="Printing.html#withSGRStack"><span class="hs-identifier hs-var">withSGRStack</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Seq SGR -&gt; Seq SGR -&gt; Seq SGR
+forall a. Seq a -&gt; Seq a -&gt; Seq a
+</span><span class="hs-operator hs-var">&gt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">[SGR] -&gt; Seq SGR
+forall a. [a] -&gt; Seq a
+</span><span class="hs-identifier hs-var">Seq.fromList</span></span><span> </span><span class="annot"><span class="annottext">[SGR]
+</span><a href="#local-6989586621679165387"><span class="hs-identifier hs-var">sgrs</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SGRStack ()
+</span><a href="Printing.html#setSGRScope"><span class="hs-identifier hs-var">setSGRScope</span></a></span><span> </span><span class="annot"><span class="annottext">SGRStack () -&gt; SGRStack a -&gt; SGRStack a
+forall a b. SGRStack a -&gt; SGRStack b -&gt; SGRStack b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; m b -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">SGRStack a
+</span><a href="#local-6989586621679165388"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-89"></span><span>  </span><span class="annot"><span class="annottext">Seq SGR -&gt; SGRStack ()
+forall s (m :: * -&gt; *). MonadState s m =&gt; s -&gt; m ()
+</span><span class="hs-identifier hs-var">put</span></span><span> </span><span class="annot"><span class="annottext">Seq SGR
+</span><a href="#local-6989586621679165389"><span class="hs-identifier hs-var">prevSGR</span></a></span><span>
+</span><span id="line-90"></span><span>  </span><span class="annot"><span class="annottext">SGRStack ()
+</span><a href="Printing.html#setSGRScope"><span class="hs-identifier hs-var">setSGRScope</span></a></span><span>
+</span><span id="line-91"></span><span>  </span><span class="annot"><span class="annottext">a -&gt; SGRStack a
+forall a. a -&gt; SGRStack a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679165390"><span class="hs-identifier hs-var">res</span></a></span><span>
+</span><span id="line-92"></span><span>
+</span><span id="line-93"></span><span class="annot"><a href="Printing.html#sgrPutStr"><span class="hs-identifier hs-type">sgrPutStr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Printing.html#Message"><span class="hs-identifier hs-type">Message</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Printing.html#SGRStack"><span class="hs-identifier hs-type">SGRStack</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-94"></span><span id="sgrPutStr"><span class="annot"><span class="annottext">sgrPutStr :: String -&gt; SGRStack ()
+</span><a href="Printing.html#sgrPutStr"><span class="hs-identifier hs-var hs-var">sgrPutStr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO () -&gt; SGRStack ()
+forall a. IO a -&gt; SGRStack a
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; SGRStack ())
+-&gt; (String -&gt; IO ()) -&gt; String -&gt; SGRStack ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; IO ()
+</span><span class="hs-identifier hs-var">putStr</span></span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span class="annot"><a href="Printing.html#sgrPutStrLn"><span class="hs-identifier hs-type">sgrPutStrLn</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Printing.html#Message"><span class="hs-identifier hs-type">Message</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Printing.html#SGRStack"><span class="hs-identifier hs-type">SGRStack</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-97"></span><span id="sgrPutStrLn"><span class="annot"><span class="annottext">sgrPutStrLn :: String -&gt; SGRStack ()
+</span><a href="Printing.html#sgrPutStrLn"><span class="hs-identifier hs-var hs-var">sgrPutStrLn</span></a></span></span><span> </span><span id="local-6989586621679165392"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679165392"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-98"></span><span>  </span><span id="local-6989586621679165393"><span class="annot"><span class="annottext">Seq SGR
+</span><a href="#local-6989586621679165393"><span class="hs-identifier hs-var">prevSGR</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SGRStack (Seq SGR)
+forall s (m :: * -&gt; *). MonadState s m =&gt; m s
+</span><span class="hs-identifier hs-var">get</span></span><span>
+</span><span id="line-99"></span><span>  </span><span class="annot"><span class="annottext">String -&gt; SGRStack ()
+</span><a href="Printing.html#sgrPutStr"><span class="hs-identifier hs-var">sgrPutStr</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679165392"><span class="hs-identifier hs-var">msg</span></a></span><span>
+</span><span id="line-100"></span><span>  </span><span class="annot"><span class="annottext">[SGR] -&gt; SGRStack () -&gt; SGRStack ()
+forall a. [SGR] -&gt; SGRStack a -&gt; SGRStack a
+</span><a href="Printing.html#nestedSGRScope"><span class="hs-identifier hs-var">nestedSGRScope</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">SGR
+Item [SGR]
+</span><span class="hs-identifier hs-var">Reset</span></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">(SGRStack () -&gt; SGRStack ()) -&gt; SGRStack () -&gt; SGRStack ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-101"></span><span>    </span><span class="annot"><span class="annottext">IO () -&gt; SGRStack ()
+forall a. IO a -&gt; SGRStack a
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; SGRStack ()) -&gt; IO () -&gt; SGRStack ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; IO ()
+</span><span class="hs-identifier hs-var">putStrLn</span></span><span> </span><span class="annot"><span class="annottext">String
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span>
+</span><span id="line-102"></span><span>  </span><span class="annot"><span class="annottext">Seq SGR -&gt; SGRStack ()
+forall s (m :: * -&gt; *). MonadState s m =&gt; s -&gt; m ()
+</span><span class="hs-identifier hs-var">put</span></span><span> </span><span class="annot"><span class="annottext">Seq SGR
+</span><a href="#local-6989586621679165393"><span class="hs-identifier hs-var">prevSGR</span></a></span><span>
+</span><span id="line-103"></span><span>  </span><span class="annot"><span class="annottext">SGRStack ()
+</span><a href="Printing.html#setSGRScope"><span class="hs-identifier hs-var">setSGRScope</span></a></span><span>
+</span><span id="line-104"></span><span>
+</span><span id="line-105"></span><span class="annot"><a href="Printing.html#sgrHyperlink"><span class="hs-identifier hs-type">sgrHyperlink</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Printing.html#URI"><span class="hs-identifier hs-type">URI</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Printing.html#Message"><span class="hs-identifier hs-type">Message</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Printing.html#SGRStack"><span class="hs-identifier hs-type">SGRStack</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-106"></span><span id="sgrHyperlink"><span class="annot"><span class="annottext">sgrHyperlink :: String -&gt; String -&gt; SGRStack ()
+</span><a href="Printing.html#sgrHyperlink"><span class="hs-identifier hs-var hs-var">sgrHyperlink</span></a></span></span><span> </span><span id="local-6989586621679165395"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679165395"><span class="hs-identifier hs-var">uri</span></a></span></span><span> </span><span id="local-6989586621679165396"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679165396"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-107"></span><span>  </span><span class="annot"><span class="annottext">[SGR] -&gt; SGRStack () -&gt; SGRStack ()
+forall a. [SGR] -&gt; SGRStack a -&gt; SGRStack a
+</span><a href="Printing.html#nestedSGRScope"><span class="hs-identifier hs-var">nestedSGRScope</span></a></span><span> </span><span class="annot"><span class="annottext">[SGR]
+</span><a href="Printing.html#sgrBlue"><span class="hs-identifier hs-var">sgrBlue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IO () -&gt; SGRStack ()
+forall a. IO a -&gt; SGRStack a
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; SGRStack ()) -&gt; IO () -&gt; SGRStack ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; IO ()
+</span><span class="hs-identifier hs-var">hyperlink</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679165395"><span class="hs-identifier hs-var">uri</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679165396"><span class="hs-identifier hs-var">msg</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-108"></span></pre></body></html>

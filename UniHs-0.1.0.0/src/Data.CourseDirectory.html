@@ -1,0 +1,224 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE RecordWildCards #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Data.CourseDirectory</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-6"></span><span>  </span><span class="annot"><a href="Data.CourseDirectory.html#SubjectCode"><span class="hs-identifier">SubjectCode</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="annot"><a href="Data.CourseDirectory.html#SubjectIdentifier"><span class="hs-identifier">SubjectIdentifier</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>  </span><span class="annot"><a href="Data.CourseDirectory.html#CourseCode"><span class="hs-identifier">CourseCode</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.CourseDirectory.html#CourseCode"><span class="hs-identifier">CourseCode</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>  </span><span class="annot"><a href="Data.CourseDirectory.html#CourseDirectory"><span class="hs-identifier">CourseDirectory</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.CourseDirectory.html#CourseDirectory"><span class="hs-identifier">CourseDirectory</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>  </span><span class="annot"><a href="Data.CourseDirectory.html#AssessmentsDirectory"><span class="hs-identifier">AssessmentsDirectory</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.CourseDirectory.html#AssessmentsDirectory"><span class="hs-identifier">AssessmentsDirectory</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>  </span><span class="annot"><a href="Data.CourseDirectory.html#AssessmentItem"><span class="hs-identifier">AssessmentItem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.CourseDirectory.html#AssessmentItem"><span class="hs-identifier">AssessmentItem</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>  </span><span class="annot"><a href="Data.CourseDirectory.html#mkCourseCode"><span class="hs-identifier">mkCourseCode</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>  </span><span class="annot"><a href="Data.CourseDirectory.html#mkAssessmentItem"><span class="hs-identifier">mkAssessmentItem</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-comment">-- Lenses</span><span>
+</span><span id="line-15"></span><span>  </span><span class="annot"><a href="Data.CourseDirectory.html#assessmentItemNumber"><span class="hs-identifier">assessmentItemNumber</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="annot"><a href="Data.CourseDirectory.html#assessmentItemDirectory"><span class="hs-identifier">assessmentItemDirectory</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>  </span><span class="annot"><a href="Data.CourseDirectory.html#assessmentsDirectoryPath"><span class="hs-identifier">assessmentsDirectoryPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>  </span><span class="annot"><a href="Data.CourseDirectory.html#assessmentItems"><span class="hs-identifier">assessmentItems</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>  </span><span class="annot"><a href="Data.CourseDirectory.html#courseDirectoryPath"><span class="hs-identifier">courseDirectoryPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>  </span><span class="annot"><a href="Data.CourseDirectory.html#courseAssessmentsDirectoryRoot"><span class="hs-identifier">courseAssessmentsDirectoryRoot</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>  </span><span class="annot"><a href="Data.CourseDirectory.html#subjectCode"><span class="hs-identifier">subjectCode</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>  </span><span class="annot"><a href="Data.CourseDirectory.html#numericIdentifier"><span class="hs-identifier">numericIdentifier</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">makeLenses</span></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.CourseDirectory.Parsing.html"><span class="hs-identifier">Data.CourseDirectory.Parsing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.CourseDirectory.Parsing.html#parseAssessmentItemFolderNumber"><span class="hs-identifier">parseAssessmentItemFolderNumber</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.CourseDirectory.Parsing.html#parseCourseCode"><span class="hs-identifier">parseCourseCode</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Either.Combinators</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">rightToMaybe</span></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Sequence</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Seq</span></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Void</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Void</span></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Path</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Abs</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Dir</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Path</span></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="StringFormatters.html"><span class="hs-identifier">StringFormatters</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="StringFormatters.html#cleanDirNameString"><span class="hs-identifier">cleanDirNameString</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Text.Megaparsec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ParseErrorBundle</span></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">type</span><span> </span><span id="SubjectCode"><span class="annot"><a href="Data.CourseDirectory.html#SubjectCode"><span class="hs-identifier hs-var">SubjectCode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">type</span><span> </span><span id="SubjectIdentifier"><span class="annot"><a href="Data.CourseDirectory.html#SubjectIdentifier"><span class="hs-identifier hs-var">SubjectIdentifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">data</span><span> </span><span id="CourseCode"><span class="annot"><a href="Data.CourseDirectory.html#CourseCode"><span class="hs-identifier hs-var">CourseCode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CourseCode"><span class="annot"><a href="Data.CourseDirectory.html#CourseCode"><span class="hs-identifier hs-var">CourseCode</span></a></span></span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_subjectCode"><span class="annot"><span class="annottext">CourseCode -&gt; String
+</span><a href="Data.CourseDirectory.html#_subjectCode"><span class="hs-identifier hs-var hs-var">_subjectCode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.CourseDirectory.html#SubjectCode"><span class="hs-identifier hs-type">SubjectCode</span></a></span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="_numericIdentifier"><span class="annot"><span class="annottext">CourseCode -&gt; SubjectIdentifier
+</span><a href="Data.CourseDirectory.html#_numericIdentifier"><span class="hs-identifier hs-var hs-var">_numericIdentifier</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.CourseDirectory.html#SubjectIdentifier"><span class="hs-identifier hs-type">SubjectIdentifier</span></a></span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679165508"><span id="local-6989586621679165515"><span class="annot"><span class="annottext">CourseCode -&gt; CourseCode -&gt; Bool
+(CourseCode -&gt; CourseCode -&gt; Bool)
+-&gt; (CourseCode -&gt; CourseCode -&gt; Bool) -&gt; Eq CourseCode
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: CourseCode -&gt; CourseCode -&gt; Bool
+== :: CourseCode -&gt; CourseCode -&gt; Bool
+$c/= :: CourseCode -&gt; CourseCode -&gt; Bool
+/= :: CourseCode -&gt; CourseCode -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="hs-keyword">data</span><span> </span><span id="CourseDirectory"><span class="annot"><a href="Data.CourseDirectory.html#CourseDirectory"><span class="hs-identifier hs-var">CourseDirectory</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CourseDirectory"><span class="annot"><a href="Data.CourseDirectory.html#CourseDirectory"><span class="hs-identifier hs-var">CourseDirectory</span></a></span></span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_courseDirectoryPath"><span class="annot"><span class="annottext">CourseDirectory -&gt; Path Abs Dir
+</span><a href="Data.CourseDirectory.html#_courseDirectoryPath"><span class="hs-identifier hs-var hs-var">_courseDirectoryPath</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="_courseAssessmentsDirectoryRoot"><span class="annot"><span class="annottext">CourseDirectory -&gt; Maybe AssessmentsDirectory
+</span><a href="Data.CourseDirectory.html#_courseAssessmentsDirectoryRoot"><span class="hs-identifier hs-var hs-var">_courseAssessmentsDirectoryRoot</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Data.CourseDirectory.html#AssessmentsDirectory"><span class="hs-identifier hs-type">AssessmentsDirectory</span></a></span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679165523"><span id="local-6989586621679165530"><span class="annot"><span class="annottext">CourseDirectory -&gt; CourseDirectory -&gt; Bool
+(CourseDirectory -&gt; CourseDirectory -&gt; Bool)
+-&gt; (CourseDirectory -&gt; CourseDirectory -&gt; Bool)
+-&gt; Eq CourseDirectory
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: CourseDirectory -&gt; CourseDirectory -&gt; Bool
+== :: CourseDirectory -&gt; CourseDirectory -&gt; Bool
+$c/= :: CourseDirectory -&gt; CourseDirectory -&gt; Bool
+/= :: CourseDirectory -&gt; CourseDirectory -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165535"><span id="local-6989586621679165544"><span id="local-6989586621679165548"><span class="annot"><span class="annottext">Int -&gt; CourseDirectory -&gt; ShowS
+[CourseDirectory] -&gt; ShowS
+CourseDirectory -&gt; String
+(Int -&gt; CourseDirectory -&gt; ShowS)
+-&gt; (CourseDirectory -&gt; String)
+-&gt; ([CourseDirectory] -&gt; ShowS)
+-&gt; Show CourseDirectory
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; CourseDirectory -&gt; ShowS
+showsPrec :: Int -&gt; CourseDirectory -&gt; ShowS
+$cshow :: CourseDirectory -&gt; String
+show :: CourseDirectory -&gt; String
+$cshowList :: [CourseDirectory] -&gt; ShowS
+showList :: [CourseDirectory] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="hs-keyword">data</span><span> </span><span id="AssessmentsDirectory"><span class="annot"><a href="Data.CourseDirectory.html#AssessmentsDirectory"><span class="hs-identifier hs-var">AssessmentsDirectory</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AssessmentsDirectory"><span class="annot"><a href="Data.CourseDirectory.html#AssessmentsDirectory"><span class="hs-identifier hs-var">AssessmentsDirectory</span></a></span></span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_assessmentsDirectoryPath"><span class="annot"><span class="annottext">AssessmentsDirectory -&gt; Path Abs Dir
+</span><a href="Data.CourseDirectory.html#_assessmentsDirectoryPath"><span class="hs-identifier hs-var hs-var">_assessmentsDirectoryPath</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="_assessmentItems"><span class="annot"><span class="annottext">AssessmentsDirectory -&gt; Seq AssessmentItem
+</span><a href="Data.CourseDirectory.html#_assessmentItems"><span class="hs-identifier hs-var hs-var">_assessmentItems</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><a href="Data.CourseDirectory.html#AssessmentItem"><span class="hs-identifier hs-type">AssessmentItem</span></a></span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679165555"><span id="local-6989586621679165561"><span class="annot"><span class="annottext">AssessmentsDirectory -&gt; AssessmentsDirectory -&gt; Bool
+(AssessmentsDirectory -&gt; AssessmentsDirectory -&gt; Bool)
+-&gt; (AssessmentsDirectory -&gt; AssessmentsDirectory -&gt; Bool)
+-&gt; Eq AssessmentsDirectory
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: AssessmentsDirectory -&gt; AssessmentsDirectory -&gt; Bool
+== :: AssessmentsDirectory -&gt; AssessmentsDirectory -&gt; Bool
+$c/= :: AssessmentsDirectory -&gt; AssessmentsDirectory -&gt; Bool
+/= :: AssessmentsDirectory -&gt; AssessmentsDirectory -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165565"><span id="local-6989586621679165572"><span id="local-6989586621679165575"><span class="annot"><span class="annottext">Int -&gt; AssessmentsDirectory -&gt; ShowS
+[AssessmentsDirectory] -&gt; ShowS
+AssessmentsDirectory -&gt; String
+(Int -&gt; AssessmentsDirectory -&gt; ShowS)
+-&gt; (AssessmentsDirectory -&gt; String)
+-&gt; ([AssessmentsDirectory] -&gt; ShowS)
+-&gt; Show AssessmentsDirectory
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; AssessmentsDirectory -&gt; ShowS
+showsPrec :: Int -&gt; AssessmentsDirectory -&gt; ShowS
+$cshow :: AssessmentsDirectory -&gt; String
+show :: AssessmentsDirectory -&gt; String
+$cshowList :: [AssessmentsDirectory] -&gt; ShowS
+showList :: [AssessmentsDirectory] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span>
+</span><span id="line-56"></span><span class="hs-keyword">data</span><span> </span><span id="AssessmentItem"><span class="annot"><a href="Data.CourseDirectory.html#AssessmentItem"><span class="hs-identifier hs-var">AssessmentItem</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AssessmentItem"><span class="annot"><a href="Data.CourseDirectory.html#AssessmentItem"><span class="hs-identifier hs-var">AssessmentItem</span></a></span></span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_assessmentItemNumber"><span class="annot"><span class="annottext">AssessmentItem -&gt; SubjectIdentifier
+</span><a href="Data.CourseDirectory.html#_assessmentItemNumber"><span class="hs-identifier hs-var hs-var">_assessmentItemNumber</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="_assessmentItemDirectory"><span class="annot"><span class="annottext">AssessmentItem -&gt; Path Abs Dir
+</span><a href="Data.CourseDirectory.html#_assessmentItemDirectory"><span class="hs-identifier hs-var hs-var">_assessmentItemDirectory</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679165581"><span id="local-6989586621679165585"><span class="annot"><span class="annottext">AssessmentItem -&gt; AssessmentItem -&gt; Bool
+(AssessmentItem -&gt; AssessmentItem -&gt; Bool)
+-&gt; (AssessmentItem -&gt; AssessmentItem -&gt; Bool) -&gt; Eq AssessmentItem
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: AssessmentItem -&gt; AssessmentItem -&gt; Bool
+== :: AssessmentItem -&gt; AssessmentItem -&gt; Bool
+$c/= :: AssessmentItem -&gt; AssessmentItem -&gt; Bool
+/= :: AssessmentItem -&gt; AssessmentItem -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165588"><span id="local-6989586621679165594"><span id="local-6989586621679165597"><span class="annot"><span class="annottext">Int -&gt; AssessmentItem -&gt; ShowS
+[AssessmentItem] -&gt; ShowS
+AssessmentItem -&gt; String
+(Int -&gt; AssessmentItem -&gt; ShowS)
+-&gt; (AssessmentItem -&gt; String)
+-&gt; ([AssessmentItem] -&gt; ShowS)
+-&gt; Show AssessmentItem
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; AssessmentItem -&gt; ShowS
+showsPrec :: Int -&gt; AssessmentItem -&gt; ShowS
+$cshow :: AssessmentItem -&gt; String
+show :: AssessmentItem -&gt; String
+$cshowList :: [AssessmentItem] -&gt; ShowS
+showList :: [AssessmentItem] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span>
+</span><span id="line-62"></span><span id="assessmentItemNumber"><span id="assessmentItemDirectory"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">AssessmentItem</span></span></span><span>
+</span><span id="line-63"></span><span id="assessmentsDirectoryPath"><span id="assessmentItems"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">AssessmentsDirectory</span></span></span><span>
+</span><span id="line-64"></span><span id="courseDirectoryPath"><span id="courseAssessmentsDirectoryRoot"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">CourseDirectory</span></span></span><span>
+</span><span id="line-65"></span><span id="subjectCode"><span id="numericIdentifier"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">CourseCode</span></span></span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span class="hs-comment">-- TODO: Move these mk functions to Parsing</span><span>
+</span><span id="line-68"></span><span class="annot"><a href="Data.CourseDirectory.html#mkCourseCode"><span class="hs-identifier hs-type">mkCourseCode</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Data.CourseDirectory.html#CourseCode"><span class="hs-identifier hs-type">CourseCode</span></a></span><span>
+</span><span id="line-69"></span><span id="mkCourseCode"><span class="annot"><span class="annottext">mkCourseCode :: String -&gt; Maybe CourseCode
+</span><a href="Data.CourseDirectory.html#mkCourseCode"><span class="hs-identifier hs-var hs-var">mkCourseCode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-70"></span><span>  </span><span class="annot"><span class="annottext">Either (ParseErrorBundle String Void) CourseCode
+-&gt; Maybe CourseCode
+forall a b. Either a b -&gt; Maybe b
+</span><span class="hs-identifier hs-var">rightToMaybe</span></span><span>
+</span><span id="line-71"></span><span>    </span><span class="annot"><span class="annottext">(Either (ParseErrorBundle String Void) CourseCode
+ -&gt; Maybe CourseCode)
+-&gt; (String -&gt; Either (ParseErrorBundle String Void) CourseCode)
+-&gt; String
+-&gt; Maybe CourseCode
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">((String, String) -&gt; CourseCode)
+-&gt; Either (ParseErrorBundle String Void) (String, String)
+-&gt; Either (ParseErrorBundle String Void) CourseCode
+forall a b.
+(a -&gt; b)
+-&gt; Either (ParseErrorBundle String Void) a
+-&gt; Either (ParseErrorBundle String Void) b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621679165648"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679165648"><span class="hs-identifier hs-var">subj</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165649"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679165649"><span class="hs-identifier hs-var">ident</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; SubjectIdentifier -&gt; CourseCode
+</span><a href="Data.CourseDirectory.html#CourseCode"><span class="hs-identifier hs-var">CourseCode</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679165648"><span class="hs-identifier hs-var">subj</span></a></span><span> </span><span class="annot"><span class="annottext">(SubjectIdentifier -&gt; CourseCode)
+-&gt; SubjectIdentifier -&gt; CourseCode
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; SubjectIdentifier
+forall a. Read a =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">read</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679165649"><span class="hs-identifier hs-var">ident</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">(Either (ParseErrorBundle String Void) (String, String)
+ -&gt; Either (ParseErrorBundle String Void) CourseCode)
+-&gt; (String
+    -&gt; Either (ParseErrorBundle String Void) (String, String))
+-&gt; String
+-&gt; Either (ParseErrorBundle String Void) CourseCode
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Either (ParseErrorBundle String Void) (String, String)
+</span><a href="Data.CourseDirectory.Parsing.html#parseCourseCode"><span class="hs-identifier hs-var">parseCourseCode</span></a></span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="annot"><a href="Data.CourseDirectory.html#mkAssessmentItem"><span class="hs-identifier hs-type">mkAssessmentItem</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ParseErrorBundle</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Data.CourseDirectory.html#AssessmentItem"><span class="hs-identifier hs-type">AssessmentItem</span></a></span><span>
+</span><span id="line-75"></span><span id="mkAssessmentItem"><span class="annot"><span class="annottext">mkAssessmentItem :: Path Abs Dir
+-&gt; Either (ParseErrorBundle String Void) AssessmentItem
+</span><a href="Data.CourseDirectory.html#mkAssessmentItem"><span class="hs-identifier hs-var hs-var">mkAssessmentItem</span></a></span></span><span> </span><span id="local-6989586621679165651"><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679165651"><span class="hs-identifier hs-var">assessPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679165652"><span class="annot"><span class="annottext">folderName :: String
+</span><a href="#local-6989586621679165652"><span class="hs-identifier hs-var hs-var">folderName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Path Abs Dir -&gt; String
+forall b. Path b Dir -&gt; String
+</span><a href="StringFormatters.html#cleanDirNameString"><span class="hs-identifier hs-var">cleanDirNameString</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679165651"><span class="hs-identifier hs-var">assessPath</span></a></span><span>
+</span><span id="line-77"></span><span>  </span><span id="local-6989586621679165653"><span class="annot"><span class="annottext">SubjectIdentifier
+</span><a href="#local-6989586621679165653"><span class="hs-identifier hs-var">num</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either (ParseErrorBundle String Void) SubjectIdentifier
+</span><a href="Data.CourseDirectory.Parsing.html#parseAssessmentItemFolderNumber"><span class="hs-identifier hs-var">parseAssessmentItemFolderNumber</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679165652"><span class="hs-identifier hs-var">folderName</span></a></span><span>
+</span><span id="line-78"></span><span>  </span><span class="annot"><span class="annottext">AssessmentItem
+-&gt; Either (ParseErrorBundle String Void) AssessmentItem
+forall a. a -&gt; Either (ParseErrorBundle String Void) a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(AssessmentItem
+ -&gt; Either (ParseErrorBundle String Void) AssessmentItem)
+-&gt; AssessmentItem
+-&gt; Either (ParseErrorBundle String Void) AssessmentItem
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SubjectIdentifier -&gt; Path Abs Dir -&gt; AssessmentItem
+</span><a href="Data.CourseDirectory.html#AssessmentItem"><span class="hs-identifier hs-var">AssessmentItem</span></a></span><span> </span><span class="annot"><span class="annottext">SubjectIdentifier
+</span><a href="#local-6989586621679165653"><span class="hs-identifier hs-var">num</span></a></span><span> </span><span class="annot"><span class="annottext">Path Abs Dir
+</span><a href="#local-6989586621679165651"><span class="hs-identifier hs-var">assessPath</span></a></span><span>
+</span><span id="line-79"></span></pre></body></html>

@@ -1,0 +1,523 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DeriveGeneric #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE OverloadedLists #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE QuasiQuotes #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Data.Configuration</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-10"></span><span>  </span><span class="annot"><span class="hs-comment">-- * Type Alias</span></span><span>
+</span><span id="line-11"></span><span>  </span><span class="annot"><a href="Data.Configuration.html#ReplacementActionName"><span class="hs-identifier">ReplacementActionName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>  </span><span class="annot"><a href="Data.Configuration.html#ReplacementSearchString"><span class="hs-identifier">ReplacementSearchString</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>  </span><span class="annot"><a href="Data.Configuration.html#TemplateName"><span class="hs-identifier">TemplateName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span>  </span><span class="annot"><span class="hs-comment">-- * Data Types</span></span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span>  </span><span class="annot"><span class="hs-comment">-- ** Text Replacement Action</span></span><span>
+</span><span id="line-18"></span><span>  </span><span class="annot"><a href="Data.Configuration.html#TextReplacementAction"><span class="hs-identifier">TextReplacementAction</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>  </span><span class="annot"><a href="Data.Configuration.html#replacementActionName"><span class="hs-identifier">replacementActionName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>  </span><span class="annot"><a href="Data.Configuration.html#replacementActionSearchString"><span class="hs-identifier">replacementActionSearchString</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>  </span><span class="annot"><a href="Data.Configuration.html#replacementText"><span class="hs-identifier">replacementText</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span>  </span><span class="annot"><span class="hs-comment">-- ** Template Configuration</span></span><span>
+</span><span id="line-24"></span><span>  </span><span class="annot"><a href="Data.Configuration.html#AuthorInfo"><span class="hs-identifier">AuthorInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>  </span><span class="annot"><a href="Data.Configuration.html#TemplateConfiguration"><span class="hs-identifier">TemplateConfiguration</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>  </span><span class="annot"><a href="Data.Configuration.html#authorInfo"><span class="hs-identifier">authorInfo</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>  </span><span class="annot"><a href="Data.Configuration.html#templateDirectoryPath"><span class="hs-identifier">templateDirectoryPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>  </span><span class="annot"><a href="Data.Configuration.html#relativeOutputPath"><span class="hs-identifier">relativeOutputPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>  </span><span class="annot"><a href="Data.Configuration.html#fileContentReplacementMap"><span class="hs-identifier">fileContentReplacementMap</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span>  </span><span class="annot"><span class="hs-comment">-- ** Configuration</span></span><span>
+</span><span id="line-32"></span><span>  </span><span class="annot"><a href="Data.Configuration.html#Configuration"><span class="hs-identifier">Configuration</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>  </span><span class="annot"><a href="Data.Configuration.html#contentReplacementActions"><span class="hs-identifier">contentReplacementActions</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>  </span><span class="annot"><a href="Data.Configuration.html#templateConfigurations"><span class="hs-identifier">templateConfigurations</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span>  </span><span class="annot"><span class="hs-comment">-- ** Other datatypes</span></span><span>
+</span><span id="line-37"></span><span>  </span><span class="annot"><a href="Data.Configuration.html#ConfigurationPath"><span class="hs-identifier">ConfigurationPath</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Configuration.html#NewConfiguration"><span class="hs-identifier">NewConfiguration</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Configuration.html#ExistingConfiguration"><span class="hs-identifier">ExistingConfiguration</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">makeLenses</span></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List.NonEmpty</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NonEmpty</span></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map.Strict</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Map</span></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Sequence</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Seq</span></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Text</span></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">GHC.Generics</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Path</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Abs</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Dir</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">File</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Path</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Rel</span></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="hs-keyword">type</span><span> </span><span id="ReplacementActionName"><span class="annot"><a href="Data.Configuration.html#ReplacementActionName"><span class="hs-identifier hs-var">ReplacementActionName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-50"></span><span class="hs-keyword">type</span><span> </span><span id="ReplacementSearchString"><span class="annot"><a href="Data.Configuration.html#ReplacementSearchString"><span class="hs-identifier hs-var">ReplacementSearchString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-51"></span><span class="hs-keyword">type</span><span> </span><span id="TemplateName"><span class="annot"><a href="Data.Configuration.html#TemplateName"><span class="hs-identifier hs-var">TemplateName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span class="hs-comment">-- | A text replacement action to perform on the contents of a file,</span><span>
+</span><span id="line-54"></span><span class="hs-comment">-- as read from a configuration file.</span><span>
+</span><span id="line-55"></span><span class="hs-keyword">data</span><span> </span><span id="TextReplacementAction"><span class="annot"><a href="Data.Configuration.html#TextReplacementAction"><span class="hs-identifier hs-var">TextReplacementAction</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TextReplacementAction"><span class="annot"><a href="Data.Configuration.html#TextReplacementAction"><span class="hs-identifier hs-var">TextReplacementAction</span></a></span></span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_replacementActionName"><span class="annot"><span class="annottext">TextReplacementAction -&gt; ReplacementActionName
+</span><a href="Data.Configuration.html#_replacementActionName"><span class="hs-identifier hs-var hs-var">_replacementActionName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Configuration.html#ReplacementActionName"><span class="hs-identifier hs-type">ReplacementActionName</span></a></span><span>
+</span><span id="line-57"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ The unique name for the replacement action</span></span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="_replacementActionSearchString"><span class="annot"><span class="annottext">TextReplacementAction -&gt; ReplacementActionName
+</span><a href="Data.Configuration.html#_replacementActionSearchString"><span class="hs-identifier hs-var hs-var">_replacementActionSearchString</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Configuration.html#ReplacementSearchString"><span class="hs-identifier hs-type">ReplacementSearchString</span></a></span><span>
+</span><span id="line-59"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ The String to find and replace with a file</span></span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="_replacementText"><span class="annot"><span class="annottext">TextReplacementAction -&gt; ReplacementActionName
+</span><a href="Data.Configuration.html#_replacementText"><span class="hs-identifier hs-var hs-var">_replacementText</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-comment">-- ^ The value to substitute in place of the found search string.</span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-comment">-- There are some special values that can be used based on the current directory:</span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-comment">-- +------------------------+-----------------------------------------------------+</span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-comment">-- | _replacementText Value |                  Substituted Value                  |</span><span>
+</span><span id="line-66"></span><span>  </span><span class="hs-comment">-- +========================+=====================================================+</span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-comment">-- |     %%THECOURSE%%      | The course code found in the current directory.     |</span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-comment">-- +------------------------+-----------------------------------------------------+</span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-comment">-- |     %%THEASSESSNO%%    | The numeric value of the current assessment folder. |</span><span>
+</span><span id="line-70"></span><span>  </span><span class="hs-comment">-- +------------------------+-----------------------------------------------------+</span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-comment">-- |     %%THEAUTHOR%%      | The author as specified in the used template.       |</span><span>
+</span><span id="line-72"></span><span>  </span><span class="hs-comment">-- |                        | If no author is given, no replacement will be made. |</span><span>
+</span><span id="line-73"></span><span>  </span><span class="hs-comment">-- +------------------------+-----------------------------------------------------+</span><span>
+</span><span id="line-74"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-75"></span><span>  </span><span class="hs-comment">-- Any other values will be substituted as is.</span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-77"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679163401"><span id="local-6989586621679163409"><span id="local-6989586621679163413"><span class="annot"><span class="annottext">Int -&gt; TextReplacementAction -&gt; ShowS
+[TextReplacementAction] -&gt; ShowS
+TextReplacementAction -&gt; String
+(Int -&gt; TextReplacementAction -&gt; ShowS)
+-&gt; (TextReplacementAction -&gt; String)
+-&gt; ([TextReplacementAction] -&gt; ShowS)
+-&gt; Show TextReplacementAction
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; TextReplacementAction -&gt; ShowS
+showsPrec :: Int -&gt; TextReplacementAction -&gt; ShowS
+$cshow :: TextReplacementAction -&gt; String
+show :: TextReplacementAction -&gt; String
+$cshowList :: [TextReplacementAction] -&gt; ShowS
+showList :: [TextReplacementAction] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679163417"><span id="local-6989586621679163423"><span class="annot"><span class="annottext">TextReplacementAction -&gt; TextReplacementAction -&gt; Bool
+(TextReplacementAction -&gt; TextReplacementAction -&gt; Bool)
+-&gt; (TextReplacementAction -&gt; TextReplacementAction -&gt; Bool)
+-&gt; Eq TextReplacementAction
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: TextReplacementAction -&gt; TextReplacementAction -&gt; Bool
+== :: TextReplacementAction -&gt; TextReplacementAction -&gt; Bool
+$c/= :: TextReplacementAction -&gt; TextReplacementAction -&gt; Bool
+/= :: TextReplacementAction -&gt; TextReplacementAction -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679163428"><span id="local-6989586621679163430"><span class="annot"><span class="annottext">(forall x. TextReplacementAction -&gt; Rep TextReplacementAction x)
+-&gt; (forall x. Rep TextReplacementAction x -&gt; TextReplacementAction)
+-&gt; Generic TextReplacementAction
+forall x. Rep TextReplacementAction x -&gt; TextReplacementAction
+forall x. TextReplacementAction -&gt; Rep TextReplacementAction x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. TextReplacementAction -&gt; Rep TextReplacementAction x
+from :: forall x. TextReplacementAction -&gt; Rep TextReplacementAction x
+$cto :: forall x. Rep TextReplacementAction x -&gt; TextReplacementAction
+to :: forall x. Rep TextReplacementAction x -&gt; TextReplacementAction
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679163434"><span id="local-6989586621679163441"><span class="annot"><span class="annottext">Value -&gt; Parser [TextReplacementAction]
+Value -&gt; Parser TextReplacementAction
+(Value -&gt; Parser TextReplacementAction)
+-&gt; (Value -&gt; Parser [TextReplacementAction])
+-&gt; FromJSON TextReplacementAction
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+$cparseJSON :: Value -&gt; Parser TextReplacementAction
+parseJSON :: Value -&gt; Parser TextReplacementAction
+$cparseJSONList :: Value -&gt; Parser [TextReplacementAction]
+parseJSONList :: Value -&gt; Parser [TextReplacementAction]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679163532"><span id="local-6989586621679163539"><span id="local-6989586621679163542"><span id="local-6989586621679163545"><span class="annot"><span class="annottext">[TextReplacementAction] -&gt; Value
+[TextReplacementAction] -&gt; Encoding
+TextReplacementAction -&gt; Value
+TextReplacementAction -&gt; Encoding
+(TextReplacementAction -&gt; Value)
+-&gt; (TextReplacementAction -&gt; Encoding)
+-&gt; ([TextReplacementAction] -&gt; Value)
+-&gt; ([TextReplacementAction] -&gt; Encoding)
+-&gt; ToJSON TextReplacementAction
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+$ctoJSON :: TextReplacementAction -&gt; Value
+toJSON :: TextReplacementAction -&gt; Value
+$ctoEncoding :: TextReplacementAction -&gt; Encoding
+toEncoding :: TextReplacementAction -&gt; Encoding
+$ctoJSONList :: [TextReplacementAction] -&gt; Value
+toJSONList :: [TextReplacementAction] -&gt; Value
+$ctoEncodingList :: [TextReplacementAction] -&gt; Encoding
+toEncodingList :: [TextReplacementAction] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span class="annot"><span class="hs-comment">-- | Information about authors for `TemplateConfiguration`s.</span></span><span>
+</span><span id="line-80"></span><span class="hs-keyword">data</span><span> </span><span id="AuthorInfo"><span class="annot"><a href="Data.Configuration.html#AuthorInfo"><span class="hs-identifier hs-var">AuthorInfo</span></a></span></span><span>
+</span><span id="line-81"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-comment">-- | A single author</span></span><span>
+</span><span id="line-82"></span><span>    </span><span id="SingularAuthor"><span class="annot"><a href="Data.Configuration.html#SingularAuthor"><span class="hs-identifier hs-var">SingularAuthor</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | A non-empty collection of authors</span></span><span>
+</span><span id="line-84"></span><span>    </span><span id="MultipleAuthors"><span class="annot"><a href="Data.Configuration.html#MultipleAuthors"><span class="hs-identifier hs-var">MultipleAuthors</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679163645"><span id="local-6989586621679163652"><span id="local-6989586621679163656"><span class="annot"><span class="annottext">Int -&gt; AuthorInfo -&gt; ShowS
+[AuthorInfo] -&gt; ShowS
+AuthorInfo -&gt; String
+(Int -&gt; AuthorInfo -&gt; ShowS)
+-&gt; (AuthorInfo -&gt; String)
+-&gt; ([AuthorInfo] -&gt; ShowS)
+-&gt; Show AuthorInfo
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; AuthorInfo -&gt; ShowS
+showsPrec :: Int -&gt; AuthorInfo -&gt; ShowS
+$cshow :: AuthorInfo -&gt; String
+show :: AuthorInfo -&gt; String
+$cshowList :: [AuthorInfo] -&gt; ShowS
+showList :: [AuthorInfo] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679163659"><span id="local-6989586621679163664"><span class="annot"><span class="annottext">AuthorInfo -&gt; AuthorInfo -&gt; Bool
+(AuthorInfo -&gt; AuthorInfo -&gt; Bool)
+-&gt; (AuthorInfo -&gt; AuthorInfo -&gt; Bool) -&gt; Eq AuthorInfo
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: AuthorInfo -&gt; AuthorInfo -&gt; Bool
+== :: AuthorInfo -&gt; AuthorInfo -&gt; Bool
+$c/= :: AuthorInfo -&gt; AuthorInfo -&gt; Bool
+/= :: AuthorInfo -&gt; AuthorInfo -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679163668"><span id="local-6989586621679163670"><span class="annot"><span class="annottext">(forall x. AuthorInfo -&gt; Rep AuthorInfo x)
+-&gt; (forall x. Rep AuthorInfo x -&gt; AuthorInfo) -&gt; Generic AuthorInfo
+forall x. Rep AuthorInfo x -&gt; AuthorInfo
+forall x. AuthorInfo -&gt; Rep AuthorInfo x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. AuthorInfo -&gt; Rep AuthorInfo x
+from :: forall x. AuthorInfo -&gt; Rep AuthorInfo x
+$cto :: forall x. Rep AuthorInfo x -&gt; AuthorInfo
+to :: forall x. Rep AuthorInfo x -&gt; AuthorInfo
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679163673"><span id="local-6989586621679163680"><span class="annot"><span class="annottext">Value -&gt; Parser [AuthorInfo]
+Value -&gt; Parser AuthorInfo
+(Value -&gt; Parser AuthorInfo)
+-&gt; (Value -&gt; Parser [AuthorInfo]) -&gt; FromJSON AuthorInfo
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+$cparseJSON :: Value -&gt; Parser AuthorInfo
+parseJSON :: Value -&gt; Parser AuthorInfo
+$cparseJSONList :: Value -&gt; Parser [AuthorInfo]
+parseJSONList :: Value -&gt; Parser [AuthorInfo]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679163741"><span id="local-6989586621679163748"><span id="local-6989586621679163751"><span id="local-6989586621679163754"><span class="annot"><span class="annottext">[AuthorInfo] -&gt; Value
+[AuthorInfo] -&gt; Encoding
+AuthorInfo -&gt; Value
+AuthorInfo -&gt; Encoding
+(AuthorInfo -&gt; Value)
+-&gt; (AuthorInfo -&gt; Encoding)
+-&gt; ([AuthorInfo] -&gt; Value)
+-&gt; ([AuthorInfo] -&gt; Encoding)
+-&gt; ToJSON AuthorInfo
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+$ctoJSON :: AuthorInfo -&gt; Value
+toJSON :: AuthorInfo -&gt; Value
+$ctoEncoding :: AuthorInfo -&gt; Encoding
+toEncoding :: AuthorInfo -&gt; Encoding
+$ctoJSONList :: [AuthorInfo] -&gt; Value
+toJSONList :: [AuthorInfo] -&gt; Value
+$ctoEncodingList :: [AuthorInfo] -&gt; Encoding
+toEncodingList :: [AuthorInfo] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-86"></span><span>
+</span><span id="line-87"></span><span class="annot"><span class="hs-comment">-- | A template to specify a directory of files to copy to a new location.</span></span><span>
+</span><span id="line-88"></span><span class="hs-keyword">data</span><span> </span><span id="TemplateConfiguration"><span class="annot"><a href="Data.Configuration.html#TemplateConfiguration"><span class="hs-identifier hs-var">TemplateConfiguration</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TemplateConfiguration"><span class="annot"><a href="Data.Configuration.html#TemplateConfiguration"><span class="hs-identifier hs-var">TemplateConfiguration</span></a></span></span><span>
+</span><span id="line-89"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_authorInfo"><span class="annot"><span class="annottext">TemplateConfiguration -&gt; Maybe AuthorInfo
+</span><a href="Data.Configuration.html#_authorInfo"><span class="hs-identifier hs-var hs-var">_authorInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Data.Configuration.html#AuthorInfo"><span class="hs-identifier hs-type">AuthorInfo</span></a></span><span>
+</span><span id="line-90"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ The author of the current template</span></span><span>
+</span><span id="line-91"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="_templateDirectoryPath"><span class="annot"><span class="annottext">TemplateConfiguration -&gt; Path Abs Dir
+</span><a href="Data.Configuration.html#_templateDirectoryPath"><span class="hs-identifier hs-var hs-var">_templateDirectoryPath</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span>
+</span><span id="line-92"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ The absolute path to the directory of files consisting of the template</span></span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="_relativeOutputPath"><span class="annot"><span class="annottext">TemplateConfiguration -&gt; Path Rel Dir
+</span><a href="Data.Configuration.html#_relativeOutputPath"><span class="hs-identifier hs-var hs-var">_relativeOutputPath</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Rel</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dir</span></span><span>
+</span><span id="line-94"></span><span>  </span><span class="hs-comment">-- ^ The path relative to the assessment root (or current directory when using --here)</span><span>
+</span><span id="line-95"></span><span>  </span><span class="hs-comment">-- where the contents of the template folder will be copied into.</span><span>
+</span><span id="line-96"></span><span>  </span><span class="hs-comment">-- An empty path will copy directly into the root directory, without a new folder.</span><span>
+</span><span id="line-97"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="_fileContentReplacementMap"><span class="annot"><span class="annottext">TemplateConfiguration
+-&gt; Map (Path Rel File) (Seq ReplacementActionName)
+</span><a href="Data.Configuration.html#_fileContentReplacementMap"><span class="hs-identifier hs-var hs-var">_fileContentReplacementMap</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Rel</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">File</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span>
+</span><span id="line-98"></span><span>  </span><span class="hs-comment">-- ^ A mapping of files relative to the template directory with `TextReplacementAction`s to perform.</span><span>
+</span><span id="line-99"></span><span>  </span><span class="hs-comment">-- Keys are the relative file paths and values are `Seq Text` of names to `TextReplacementActions`.</span><span>
+</span><span id="line-100"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-101"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679163823"><span id="local-6989586621679163836"><span id="local-6989586621679163840"><span class="annot"><span class="annottext">Int -&gt; TemplateConfiguration -&gt; ShowS
+[TemplateConfiguration] -&gt; ShowS
+TemplateConfiguration -&gt; String
+(Int -&gt; TemplateConfiguration -&gt; ShowS)
+-&gt; (TemplateConfiguration -&gt; String)
+-&gt; ([TemplateConfiguration] -&gt; ShowS)
+-&gt; Show TemplateConfiguration
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; TemplateConfiguration -&gt; ShowS
+showsPrec :: Int -&gt; TemplateConfiguration -&gt; ShowS
+$cshow :: TemplateConfiguration -&gt; String
+show :: TemplateConfiguration -&gt; String
+$cshowList :: [TemplateConfiguration] -&gt; ShowS
+showList :: [TemplateConfiguration] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679163845"><span id="local-6989586621679163857"><span class="annot"><span class="annottext">TemplateConfiguration -&gt; TemplateConfiguration -&gt; Bool
+(TemplateConfiguration -&gt; TemplateConfiguration -&gt; Bool)
+-&gt; (TemplateConfiguration -&gt; TemplateConfiguration -&gt; Bool)
+-&gt; Eq TemplateConfiguration
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: TemplateConfiguration -&gt; TemplateConfiguration -&gt; Bool
+== :: TemplateConfiguration -&gt; TemplateConfiguration -&gt; Bool
+$c/= :: TemplateConfiguration -&gt; TemplateConfiguration -&gt; Bool
+/= :: TemplateConfiguration -&gt; TemplateConfiguration -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679163863"><span id="local-6989586621679163865"><span class="annot"><span class="annottext">(forall x. TemplateConfiguration -&gt; Rep TemplateConfiguration x)
+-&gt; (forall x. Rep TemplateConfiguration x -&gt; TemplateConfiguration)
+-&gt; Generic TemplateConfiguration
+forall x. Rep TemplateConfiguration x -&gt; TemplateConfiguration
+forall x. TemplateConfiguration -&gt; Rep TemplateConfiguration x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. TemplateConfiguration -&gt; Rep TemplateConfiguration x
+from :: forall x. TemplateConfiguration -&gt; Rep TemplateConfiguration x
+$cto :: forall x. Rep TemplateConfiguration x -&gt; TemplateConfiguration
+to :: forall x. Rep TemplateConfiguration x -&gt; TemplateConfiguration
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679163868"><span id="local-6989586621679163875"><span class="annot"><span class="annottext">Value -&gt; Parser [TemplateConfiguration]
+Value -&gt; Parser TemplateConfiguration
+(Value -&gt; Parser TemplateConfiguration)
+-&gt; (Value -&gt; Parser [TemplateConfiguration])
+-&gt; FromJSON TemplateConfiguration
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+$cparseJSON :: Value -&gt; Parser TemplateConfiguration
+parseJSON :: Value -&gt; Parser TemplateConfiguration
+$cparseJSONList :: Value -&gt; Parser [TemplateConfiguration]
+parseJSONList :: Value -&gt; Parser [TemplateConfiguration]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679163958"><span id="local-6989586621679163965"><span id="local-6989586621679163968"><span id="local-6989586621679163971"><span class="annot"><span class="annottext">[TemplateConfiguration] -&gt; Value
+[TemplateConfiguration] -&gt; Encoding
+TemplateConfiguration -&gt; Value
+TemplateConfiguration -&gt; Encoding
+(TemplateConfiguration -&gt; Value)
+-&gt; (TemplateConfiguration -&gt; Encoding)
+-&gt; ([TemplateConfiguration] -&gt; Value)
+-&gt; ([TemplateConfiguration] -&gt; Encoding)
+-&gt; ToJSON TemplateConfiguration
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+$ctoJSON :: TemplateConfiguration -&gt; Value
+toJSON :: TemplateConfiguration -&gt; Value
+$ctoEncoding :: TemplateConfiguration -&gt; Encoding
+toEncoding :: TemplateConfiguration -&gt; Encoding
+$ctoJSONList :: [TemplateConfiguration] -&gt; Value
+toJSONList :: [TemplateConfiguration] -&gt; Value
+$ctoEncodingList :: [TemplateConfiguration] -&gt; Encoding
+toEncodingList :: [TemplateConfiguration] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span class="annot"><span class="hs-comment">-- | A template configuration used to copy a directory when creating a new assessment.</span></span><span>
+</span><span id="line-104"></span><span class="hs-keyword">data</span><span> </span><span id="Configuration"><span class="annot"><a href="Data.Configuration.html#Configuration"><span class="hs-identifier hs-var">Configuration</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Configuration"><span class="annot"><a href="Data.Configuration.html#Configuration"><span class="hs-identifier hs-var">Configuration</span></a></span></span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_contentReplacementActions"><span class="annot"><span class="annottext">Configuration -&gt; Seq TextReplacementAction
+</span><a href="Data.Configuration.html#_contentReplacementActions"><span class="hs-identifier hs-var hs-var">_contentReplacementActions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><a href="Data.Configuration.html#TextReplacementAction"><span class="hs-identifier hs-type">TextReplacementAction</span></a></span><span>
+</span><span id="line-106"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ A collection of replacement actions to perform on specified file contents</span></span><span>
+</span><span id="line-107"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- TODO: Allow for copy templates to be compositions, which are lists of existing copy template names</span><span>
+</span><span id="line-108"></span><span>    </span><span id="_templateConfigurations"><span class="annot"><span class="annottext">Configuration -&gt; Map ReplacementActionName TemplateConfiguration
+</span><a href="Data.Configuration.html#_templateConfigurations"><span class="hs-identifier hs-var hs-var">_templateConfigurations</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Map</span></span><span> </span><span class="annot"><a href="Data.Configuration.html#TemplateName"><span class="hs-identifier hs-type">TemplateName</span></a></span><span> </span><span class="annot"><a href="Data.Configuration.html#TemplateConfiguration"><span class="hs-identifier hs-type">TemplateConfiguration</span></a></span><span>
+</span><span id="line-109"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ A mapping of template configuration names to configurations</span></span><span>
+</span><span id="line-110"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-111"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679164078"><span id="local-6989586621679164086"><span id="local-6989586621679164090"><span class="annot"><span class="annottext">Int -&gt; Configuration -&gt; ShowS
+[Configuration] -&gt; ShowS
+Configuration -&gt; String
+(Int -&gt; Configuration -&gt; ShowS)
+-&gt; (Configuration -&gt; String)
+-&gt; ([Configuration] -&gt; ShowS)
+-&gt; Show Configuration
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; Configuration -&gt; ShowS
+showsPrec :: Int -&gt; Configuration -&gt; ShowS
+$cshow :: Configuration -&gt; String
+show :: Configuration -&gt; String
+$cshowList :: [Configuration] -&gt; ShowS
+showList :: [Configuration] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679164093"><span id="local-6989586621679164100"><span class="annot"><span class="annottext">Configuration -&gt; Configuration -&gt; Bool
+(Configuration -&gt; Configuration -&gt; Bool)
+-&gt; (Configuration -&gt; Configuration -&gt; Bool) -&gt; Eq Configuration
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: Configuration -&gt; Configuration -&gt; Bool
+== :: Configuration -&gt; Configuration -&gt; Bool
+$c/= :: Configuration -&gt; Configuration -&gt; Bool
+/= :: Configuration -&gt; Configuration -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679164104"><span id="local-6989586621679164106"><span class="annot"><span class="annottext">(forall x. Configuration -&gt; Rep Configuration x)
+-&gt; (forall x. Rep Configuration x -&gt; Configuration)
+-&gt; Generic Configuration
+forall x. Rep Configuration x -&gt; Configuration
+forall x. Configuration -&gt; Rep Configuration x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. Configuration -&gt; Rep Configuration x
+from :: forall x. Configuration -&gt; Rep Configuration x
+$cto :: forall x. Rep Configuration x -&gt; Configuration
+to :: forall x. Rep Configuration x -&gt; Configuration
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679164109"><span id="local-6989586621679164116"><span class="annot"><span class="annottext">Value -&gt; Parser [Configuration]
+Value -&gt; Parser Configuration
+(Value -&gt; Parser Configuration)
+-&gt; (Value -&gt; Parser [Configuration]) -&gt; FromJSON Configuration
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+$cparseJSON :: Value -&gt; Parser Configuration
+parseJSON :: Value -&gt; Parser Configuration
+$cparseJSONList :: Value -&gt; Parser [Configuration]
+parseJSONList :: Value -&gt; Parser [Configuration]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679164173"><span id="local-6989586621679164180"><span id="local-6989586621679164183"><span id="local-6989586621679164186"><span class="annot"><span class="annottext">[Configuration] -&gt; Value
+[Configuration] -&gt; Encoding
+Configuration -&gt; Value
+Configuration -&gt; Encoding
+(Configuration -&gt; Value)
+-&gt; (Configuration -&gt; Encoding)
+-&gt; ([Configuration] -&gt; Value)
+-&gt; ([Configuration] -&gt; Encoding)
+-&gt; ToJSON Configuration
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+$ctoJSON :: Configuration -&gt; Value
+toJSON :: Configuration -&gt; Value
+$ctoEncoding :: Configuration -&gt; Encoding
+toEncoding :: Configuration -&gt; Encoding
+$ctoJSONList :: [Configuration] -&gt; Value
+toJSONList :: [Configuration] -&gt; Value
+$ctoEncodingList :: [Configuration] -&gt; Encoding
+toEncodingList :: [Configuration] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-112"></span><span>
+</span><span id="line-113"></span><span class="hs-keyword">data</span><span> </span><span id="ConfigurationPath"><span class="annot"><a href="Data.Configuration.html#ConfigurationPath"><span class="hs-identifier hs-var">ConfigurationPath</span></a></span></span><span>
+</span><span id="line-114"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="NewConfiguration"><span class="annot"><a href="Data.Configuration.html#NewConfiguration"><span class="hs-identifier hs-var">NewConfiguration</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">File</span></span><span class="hs-special">)</span><span>
+</span><span id="line-115"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ExistingConfiguration"><span class="annot"><a href="Data.Configuration.html#ExistingConfiguration"><span class="hs-identifier hs-var">ExistingConfiguration</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Path</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Abs</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">File</span></span><span class="hs-special">)</span><span>
+</span><span id="line-116"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679164252"><span id="local-6989586621679164258"><span id="local-6989586621679164262"><span class="annot"><span class="annottext">Int -&gt; ConfigurationPath -&gt; ShowS
+[ConfigurationPath] -&gt; ShowS
+ConfigurationPath -&gt; String
+(Int -&gt; ConfigurationPath -&gt; ShowS)
+-&gt; (ConfigurationPath -&gt; String)
+-&gt; ([ConfigurationPath] -&gt; ShowS)
+-&gt; Show ConfigurationPath
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; ConfigurationPath -&gt; ShowS
+showsPrec :: Int -&gt; ConfigurationPath -&gt; ShowS
+$cshow :: ConfigurationPath -&gt; String
+show :: ConfigurationPath -&gt; String
+$cshowList :: [ConfigurationPath] -&gt; ShowS
+showList :: [ConfigurationPath] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679164265"><span id="local-6989586621679164269"><span class="annot"><span class="annottext">ConfigurationPath -&gt; ConfigurationPath -&gt; Bool
+(ConfigurationPath -&gt; ConfigurationPath -&gt; Bool)
+-&gt; (ConfigurationPath -&gt; ConfigurationPath -&gt; Bool)
+-&gt; Eq ConfigurationPath
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: ConfigurationPath -&gt; ConfigurationPath -&gt; Bool
+== :: ConfigurationPath -&gt; ConfigurationPath -&gt; Bool
+$c/= :: ConfigurationPath -&gt; ConfigurationPath -&gt; Bool
+/= :: ConfigurationPath -&gt; ConfigurationPath -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679164273"><span id="local-6989586621679164275"><span class="annot"><span class="annottext">(forall x. ConfigurationPath -&gt; Rep ConfigurationPath x)
+-&gt; (forall x. Rep ConfigurationPath x -&gt; ConfigurationPath)
+-&gt; Generic ConfigurationPath
+forall x. Rep ConfigurationPath x -&gt; ConfigurationPath
+forall x. ConfigurationPath -&gt; Rep ConfigurationPath x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. ConfigurationPath -&gt; Rep ConfigurationPath x
+from :: forall x. ConfigurationPath -&gt; Rep ConfigurationPath x
+$cto :: forall x. Rep ConfigurationPath x -&gt; ConfigurationPath
+to :: forall x. Rep ConfigurationPath x -&gt; ConfigurationPath
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679164278"><span id="local-6989586621679164285"><span class="annot"><span class="annottext">Value -&gt; Parser [ConfigurationPath]
+Value -&gt; Parser ConfigurationPath
+(Value -&gt; Parser ConfigurationPath)
+-&gt; (Value -&gt; Parser [ConfigurationPath])
+-&gt; FromJSON ConfigurationPath
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+$cparseJSON :: Value -&gt; Parser ConfigurationPath
+parseJSON :: Value -&gt; Parser ConfigurationPath
+$cparseJSONList :: Value -&gt; Parser [ConfigurationPath]
+parseJSONList :: Value -&gt; Parser [ConfigurationPath]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679164330"><span id="local-6989586621679164337"><span id="local-6989586621679164340"><span id="local-6989586621679164343"><span class="annot"><span class="annottext">[ConfigurationPath] -&gt; Value
+[ConfigurationPath] -&gt; Encoding
+ConfigurationPath -&gt; Value
+ConfigurationPath -&gt; Encoding
+(ConfigurationPath -&gt; Value)
+-&gt; (ConfigurationPath -&gt; Encoding)
+-&gt; ([ConfigurationPath] -&gt; Value)
+-&gt; ([ConfigurationPath] -&gt; Encoding)
+-&gt; ToJSON ConfigurationPath
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+$ctoJSON :: ConfigurationPath -&gt; Value
+toJSON :: ConfigurationPath -&gt; Value
+$ctoEncoding :: ConfigurationPath -&gt; Encoding
+toEncoding :: ConfigurationPath -&gt; Encoding
+$ctoJSONList :: [ConfigurationPath] -&gt; Value
+toJSONList :: [ConfigurationPath] -&gt; Value
+$ctoEncodingList :: [ConfigurationPath] -&gt; Encoding
+toEncodingList :: [ConfigurationPath] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-117"></span><span>
+</span><span id="line-118"></span><span id="replacementActionName"><span id="replacementActionSearchString"><span id="replacementText"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">TextReplacementAction</span></span></span></span><span>
+</span><span id="line-119"></span><span id="authorInfo"><span id="templateDirectoryPath"><span id="relativeOutputPath"><span id="fileContentReplacementMap"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">TemplateConfiguration</span></span></span></span></span><span>
+</span><span id="line-120"></span><span id="contentReplacementActions"><span id="templateConfigurations"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Configuration</span></span></span><span>
+</span><span id="line-121"></span><span>
+</span><span id="line-122"></span><span class="hs-comment">{-
+instance ToJSON TextReplacementAction
+instance FromJSON TextReplacementAction
+instance ToJSON CopyTemplate
+instance FromJSON CopyTemplate
+instance ToJSON CopyConfiguration
+instance FromJSON CopyConfiguration
+-}</span><span>
+</span><span id="line-130"></span><span>
+</span><span id="line-131"></span><span class="hs-comment">{-
+instance ToJSON TextReplacementAction where
+  toJSON v =
+    object
+      [ &quot;ActionName&quot; .= (v ^. replacementActionName)
+      , &quot;SearchString&quot; .= (v ^. replacementActionSearchString)
+      ]
+
+instance FromJSON TextReplacementAction where
+  parseJSON = withObject &quot;TextReplacementAction&quot; $ \v -&gt;
+    TextReplacementAction
+      &lt;$&gt; v .: &quot;ActionName&quot;
+      &lt;*&gt; v .: &quot;SearchString&quot;
+
+instance ToJSON CopyTemplate where
+  toJSON v =
+    object
+      [ &quot;TemplateFolderDirectory&quot; .= (v ^. templateFolderDirectory)
+      , &quot;RelativeOutputPath&quot; .= (v ^. relativeOutputPath)
+      , &quot;FileContentReplacementMap&quot; .= (v ^. fileContentReplacementMap)
+      ]
+
+instance FromJSON CopyTemplate where
+  parseJSON = withObject &quot;CopyTemplate&quot; $ \v -&gt;
+    CopyTemplate
+      &lt;$&gt; v .: &quot;TemplateFolderDirectory&quot;
+      &lt;*&gt; v .: &quot;RelativeOutputPath&quot;
+      &lt;*&gt; v .: &quot;FileContentReplacementMap&quot;
+
+instance ToJSON CopyConfiguration where
+  toJSON v =
+    object
+      [ &quot;CopyTemplates&quot; .= (v ^. copyTemplates)
+      , &quot;ContentReplacementActions&quot; .= (v ^. contentReplacementActions)
+      ]
+
+instance FromJSON CopyConfiguration where
+  parseJSON = withObject &quot;CopyConfiguration&quot; $ \v -&gt;
+    CopyConfiguration
+      &lt;$&gt; v .: &quot;ContentReplacementActions&quot;
+      &lt;*&gt; v .: &quot;CopyTemplates&quot;
+-}</span><span>
+</span><span id="line-173"></span></pre></body></html>
