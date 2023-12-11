@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           UniHs
-version:        0.1.0.0
+version:        0.0.1.0
 synopsis:       Maintain and create assessment template directories from templates
 description:    Please see the README on GitHub at <https://github.com/TimeTravelPenguin/UniHs#readme>
 category:       Application
