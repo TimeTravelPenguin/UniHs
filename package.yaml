@@ -32,6 +32,7 @@ dependencies:
   - filepath < 1.5
   - transformers < 0.6.2
   - lens < 5.3
+  - matrix < 0.3.7
   - megaparsec < 9.5
   - mtl < 2.4
   - optparse-applicative < 0.19
@@ -41,6 +42,7 @@ dependencies:
   - QuickCheck < 2.15
   - safe < 0.4
   - text < 2.1
+  - vector < 0.13.2
 
 ghc-options:
   - -Wall
@@ -62,6 +64,16 @@ executables:
   UniHs-exe:
     main: Main.hs
     source-dirs: app
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - UniHs
+
+  UniHs-TUI-exe:
+    main: Main.hs
+    source-dirs: app-tui
     ghc-options:
       - -threaded
       - -rtsopts

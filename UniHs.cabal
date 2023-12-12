@@ -35,8 +35,12 @@ library
       Data.Options
       Exceptions
       Helpers.IO
+      Helpers.Math
+      Helpers.Matrix
       Helpers.Maybe
       Helpers.Sequence
+      Menu.Controls
+      Menu.Drawing
       Parsing.Configuration
       Parsing.CourseDirectory
       Printing
@@ -61,6 +65,7 @@ library
     , extra <1.8
     , filepath <1.5
     , lens <5.3
+    , matrix <0.3.7
     , megaparsec <9.5
     , mtl <2.4
     , optparse-applicative <0.19
@@ -70,6 +75,41 @@ library
     , safe <0.4
     , text <2.1
     , transformers <0.6.2
+    , vector <0.13.2
+  default-language: Haskell2010
+
+executable UniHs-TUI-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_UniHs
+  hs-source-dirs:
+      app-tui
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      QuickCheck <2.15
+    , UniHs
+    , aeson <2.2.1
+    , aeson-pretty <0.9
+    , ansi-terminal <1.1
+    , base >=4.7 && <5
+    , bytestring <0.12
+    , colour <=2.3.6
+    , containers <0.7
+    , either <5.1
+    , extra <1.8
+    , filepath <1.5
+    , lens <5.3
+    , matrix <0.3.7
+    , megaparsec <9.5
+    , mtl <2.4
+    , optparse-applicative <0.19
+    , path <0.10
+    , path-io <1.9
+    , pretty-simple <4.2
+    , safe <0.4
+    , text <2.1
+    , transformers <0.6.2
+    , vector <0.13.2
   default-language: Haskell2010
 
 executable UniHs-exe
@@ -93,6 +133,7 @@ executable UniHs-exe
     , extra <1.8
     , filepath <1.5
     , lens <5.3
+    , matrix <0.3.7
     , megaparsec <9.5
     , mtl <2.4
     , optparse-applicative <0.19
@@ -102,6 +143,7 @@ executable UniHs-exe
     , safe <0.4
     , text <2.1
     , transformers <0.6.2
+    , vector <0.13.2
   default-language: Haskell2010
 
 test-suite UniHs-test
@@ -126,6 +168,7 @@ test-suite UniHs-test
     , extra <1.8
     , filepath <1.5
     , lens <5.3
+    , matrix <0.3.7
     , megaparsec <9.5
     , mtl <2.4
     , optparse-applicative <0.19
@@ -135,4 +178,5 @@ test-suite UniHs-test
     , safe <0.4
     , text <2.1
     , transformers <0.6.2
+    , vector <0.13.2
   default-language: Haskell2010
