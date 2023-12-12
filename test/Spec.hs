@@ -1,4 +1,4 @@
-import Data.CourseDirectory.Parsing (isYear)
+import Parsing.CourseDirectory (isYear)
 import Test.QuickCheck (
   Arbitrary (arbitrary),
   Gen,
